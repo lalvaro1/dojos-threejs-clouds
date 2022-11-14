@@ -39,7 +39,7 @@ function init() {
         glslVersion: THREE.GLSL3   
     });
 
-    const cloudsGeometry = new THREE.SphereGeometry( 15.25, 100, 100);
+    const cloudsGeometry = new THREE.SphereGeometry( 15.15, 100, 100);
 
     const cloudsMaterial = new THREE.ShaderMaterial({
         fragmentShader : clouds_fragmentShader,
