@@ -10,6 +10,7 @@ uniform sampler2D ground;
 uniform sampler2D mask;
 uniform sampler2D normalMap;
 uniform sampler2D clouds;
+uniform sampler2D night;
 
 vec3 computeLocalNormal() {
    vec3 normalData = (texture(normalMap, v_UV).rgb - 0.5) * 2.;
@@ -29,8 +30,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     vec3 localNormal = computeLocalNormal();
 
     vec3 light = normalize(vec3(1, -0.2, -0.5));
-    float ambient = 0.1;
-    float diffuse = dot(-light, localNormal);
+    float ambient = 0.05;
+    float diffuse = max(0., dot(-light, localNormal));
 
     vec3 refl = reflect(light, localNormal);
 
@@ -40,7 +41,13 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     float shadowIntensity = 0.5;
     float cloudShadow = 1. - texture(clouds, v_UV).r * shadowIntensity;
 
-    fragColor.xyz = (texture(ground, v_UV).rgb * (ambient + diffuse) + specular) * cloudShadow;
+    vec3 dayTexture = (texture(ground, v_UV).rgb * (ambient + diffuse) + specular) * cloudShadow;
+    vec3 nightTexture = texture(night, v_UV).rgb;    
+
+    float night_display = smoothstep(0.5, 1.0, 1. - diffuse);
+    vec3 groundTexture = dayTexture + nightTexture * night_display;
+
+    fragColor.xyz = groundTexture;
     fragColor.a = 1.0;
 }
 

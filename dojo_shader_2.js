@@ -10,6 +10,7 @@ const earthUniforms = {
     mask: { type: "t", value: new THREE.TextureLoader().load( "./textures/mask.png" ) },   
     normalMap: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth_normal_map.png") },     
     clouds: { type: "t", value: new THREE.TextureLoader().load( "./textures/clouds.jpg") },         
+    night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night.jpg") },             
 };
 
 const cloudsUniforms = {
@@ -79,11 +80,8 @@ function animate(millis) {
     controls.update();
 
     earthMesh.rotation.x = 0.5;
-    earthMesh.rotation.y = -1.5 - 0.05 * time;
+    earthMesh.rotation.y = -1.5 - 0.05 * time * 0.;
 
-//    cloudsMesh.rotation.x = 0.5;
-//    cloudsMesh.rotation.y = -1.5 - 0.05 * time;
-    
     renderer.render(scene, camera);
 }
 
