@@ -10,7 +10,7 @@ uniform sampler2D clouds;
 void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 
     vec3  light = normalize(vec3(1, -0.2, -0.5));
-    float ambient = 0.;
+    float ambient = 0.2;
     float diffuse = max(0., dot(-light, v_normal));
 
     vec3 refl = reflect(light, v_normal);

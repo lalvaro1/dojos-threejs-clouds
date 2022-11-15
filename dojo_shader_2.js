@@ -10,9 +10,9 @@ import { Uniform } from 'three';
 import { Vector3 } from 'three';
 
 let camera, renderer, controls;
-let mainScene, glowScene;
+let glowScene, earthScene, cloudScene;
 let earthMesh, nightMesh, cloudsMesh;
-let composer1, composer2;
+let composer1, composer2, composer3;
 let bloomPass;
 
 let nightRenderPass, renderScene, finalPass;
@@ -37,6 +37,7 @@ const nightUniforms = {
 
 const finalUniforms = {
     glowLayer: { type: "t", value: null },    
+    cloudLayer: { type: "t", value: null },        
     tDiffuse: { type: "t", value: null },    
 };
 
@@ -50,8 +51,10 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    glowScene = new THREE.Scene();
-    mainScene = new THREE.Scene();    
+    earthScene = new THREE.Scene();
+    glowScene = new THREE.Scene();    
+    cloudScene = new THREE.Scene();    
+
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
 
     controls = new OrbitControls( camera, renderer.domElement );
@@ -94,23 +97,28 @@ function init() {
         glslVersion: THREE.GLSL3   
     });
 
+    // Scenes
+
     earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
-    glowScene.add(earthMesh);
+    earthScene.add(earthMesh);
 
     nightMesh = new THREE.Mesh(earthGeometry, nightMaterial);
     nightMesh.parent = earthMesh;
-    mainScene.add(nightMesh);
+    glowScene.add(nightMesh);
    
     cloudsMesh = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
-    glowScene.add(cloudsMesh);
+    cloudScene.add(cloudsMesh);
 
     window.addEventListener('resize', onWindowResize, false);
 
     cloudsMesh.parent = earthMesh;
 
-    nightRenderPass = new RenderPass( mainScene, camera );
+
+    // Render Passes
+
+    nightRenderPass = new RenderPass( glowScene, camera );
     nightRenderPass.renderToScreen = false;
-    renderScene = new RenderPass( glowScene, camera );
+    renderScene = new RenderPass( earthScene, camera );
 
     bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 4.75, 0.96, 0.0);
     
@@ -121,6 +129,11 @@ function init() {
     composer1.addPass( nightRenderPass );
     composer1.addPass( bloomPass );
     composer1.renderToScreen = false;
+
+    composer3 = new EffectComposer( renderer );
+    let renderCloudScene = new RenderPass( cloudScene, camera );    
+    composer3.addPass( renderCloudScene );
+    composer3.renderToScreen = false;
 
     finalPass = new ShaderPass(finalMaterial);
 
@@ -150,6 +163,7 @@ function onWindowResize() {
     renderer.setSize( width, height );
     composer1.setSize( width, height );
     composer2.setSize( width, height );
+    composer3.setSize( width, height );    
 }
 
 function colorStrToVec3(colorStr) {
@@ -176,9 +190,11 @@ function animate(millis) {
     nightMesh.rotation.y = -1.5 - 0.05 * time;
 
     composer1.render();
-//    composer1.swapBuffers();
+    composer3.render();    
 
     finalUniforms.glowLayer.value = composer1.readBuffer.texture;
+    finalUniforms.cloudLayer.value = composer3.readBuffer.texture;    
+
     nightUniforms.color.value = colorStrToVec3(settings.glowColor);
   
     composer2.render();
