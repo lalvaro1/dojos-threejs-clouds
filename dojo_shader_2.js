@@ -116,11 +116,11 @@ function init() {
     
     bloomPass.needsSwap = false;
     bloomPass.clear = false;
-
+    
     composer1 = new EffectComposer( renderer );
     composer1.addPass( nightRenderPass );
     composer1.addPass( bloomPass );
-    composer1.addPass( bloomPass );    
+    composer1.renderToScreen = false;
 
     finalPass = new ShaderPass(finalMaterial);
 
@@ -176,6 +176,8 @@ function animate(millis) {
     nightMesh.rotation.y = -1.5 - 0.05 * time;
 
     composer1.render();
+//    composer1.swapBuffers();
+
     finalUniforms.glowLayer.value = composer1.readBuffer.texture;
     nightUniforms.color.value = colorStrToVec3(settings.glowColor);
   
