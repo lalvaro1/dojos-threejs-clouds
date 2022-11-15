@@ -1,17 +1,21 @@
 import * as THREE from 'three';
+import * as dat from 'dat.gui';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { BloomPass } from 'three/addons/postprocessing/BloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { Uniform } from 'three';
+import { Vector3 } from 'three';
 
-let camera, scene, renderer, controls, scene2;
-let earthMesh, cloudsMesh;
-let composer, composer2, finalComposer;
+let camera, renderer, controls;
+let mainScene, glowScene;
+let earthMesh, nightMesh, cloudsMesh;
+let composer1, composer2;
+let bloomPass;
 
-let nightRenderPass;
-let renderScene;
-let finalPass;
+let nightRenderPass, renderScene, finalPass;
 
 const earthUniforms = {
     time: { value: 0 },
@@ -27,21 +31,18 @@ const cloudsUniforms = {
 };
 
 const nightUniforms = {
-    time: { value: 0 },
-    ground: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth.jpg" ) },
-    mask: { type: "t", value: new THREE.TextureLoader().load( "./textures/mask.png" ) },   
-    normalMap: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth_normal_map.png") },     
-    clouds: { type: "t", value: new THREE.TextureLoader().load( "./textures/clouds.jpg") },         
     night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night.jpg") },             
+    color: new Uniform(new Vector3(1,1,1)),
 };
 
-
 const finalUniforms = {
-    earthRender: { type: "t", value: null },
-    glowRender: { type: "t", value: null },    
+    glowLayer: { type: "t", value: null },    
     tDiffuse: { type: "t", value: null },    
 };
 
+const settings = {
+    glowColor : '#ffa400',
+}
 
 function init() {
 
@@ -49,8 +50,8 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    scene = new THREE.Scene();
-    scene2 = new THREE.Scene();    
+    glowScene = new THREE.Scene();
+    mainScene = new THREE.Scene();    
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
 
     controls = new OrbitControls( camera, renderer.domElement );
@@ -93,58 +94,50 @@ function init() {
         glslVersion: THREE.GLSL3   
     });
 
-
-
     earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
-    scene.add(earthMesh);
+    glowScene.add(earthMesh);
 
-    let nightMesh = new THREE.Mesh(earthGeometry, nightMaterial);
-    scene2.add(nightMesh);
+    nightMesh = new THREE.Mesh(earthGeometry, nightMaterial);
+    nightMesh.parent = earthMesh;
+    mainScene.add(nightMesh);
    
     cloudsMesh = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
-    //scene.add(cloudsMesh);
+    glowScene.add(cloudsMesh);
 
     window.addEventListener('resize', onWindowResize, false);
 
     cloudsMesh.parent = earthMesh;
 
-    nightRenderPass = new RenderPass( scene2, camera );
-    renderScene = new RenderPass( scene, camera );
-
+    nightRenderPass = new RenderPass( mainScene, camera );
     nightRenderPass.renderToScreen = false;
+    renderScene = new RenderPass( glowScene, camera );
 
-
-    const bloomParams = {
-        exposure: 1,
-        bloomStrength: 1.5,
-        bloomThreshold: 0,
-        bloomRadius: 0
-    };
-
-    const bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
-    bloomPass.threshold = bloomParams.bloomThreshold;
-    bloomPass.strength = bloomParams.bloomStrength;
-    bloomPass.radius = bloomParams.bloomRadius;
-
+    bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 4.75, 0.96, 0.0);
+    
     bloomPass.needsSwap = false;
     bloomPass.clear = false;
 
-    bloomPass.renderToScreen = false;
-
-
-    composer = new EffectComposer( renderer );
-    composer.addPass( nightRenderPass );
-    composer.addPass( bloomPass );
+    composer1 = new EffectComposer( renderer );
+    composer1.addPass( nightRenderPass );
+    composer1.addPass( bloomPass );
+    composer1.addPass( bloomPass );    
 
     finalPass = new ShaderPass(finalMaterial);
 
     composer2 = new EffectComposer( renderer );
     composer2.addPass( renderScene );
     composer2.addPass( finalPass );
+}
 
+function initGUI() {
 
+    var settingsUI = new dat.GUI();
+    const generalFolder = settingsUI.addFolder('Glow');
 
-
+    generalFolder.add(bloomPass, 'strength', 0 , 5, 0.01);    
+    generalFolder.add(bloomPass, 'radius', 0 , 1, 0.001);        
+    generalFolder.add(bloomPass, 'threshold', 0, 1, 0.001);    
+    generalFolder.addColor(settings, 'glowColor');        
 }
 
 function onWindowResize() {
@@ -155,9 +148,18 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
 
     renderer.setSize( width, height );
-    composer.setSize( width, height );
+    composer1.setSize( width, height );
     composer2.setSize( width, height );
 }
+
+function colorStrToVec3(colorStr) {
+    const r = parseInt(colorStr.slice(1,3), 16);
+    const g = parseInt(colorStr.slice(3,5), 16);
+    const b = parseInt(colorStr.slice(5,8), 16);
+    
+    return new Vector3(r/255., g/255., b/255.);
+}
+
 
 function animate(millis) {
 
@@ -168,18 +170,20 @@ function animate(millis) {
     controls.update();
 
     earthMesh.rotation.x = 0.5;
-    earthMesh.rotation.y = -1.5 - 0.05 * time * 0.;
+    earthMesh.rotation.y = -1.5 - 0.05 * time;
 
-    composer.render();
-    finalUniforms.earthRender.value = composer.readBuffer.texture;
+    nightMesh.rotation.x = 0.5;
+    nightMesh.rotation.y = -1.5 - 0.05 * time;
 
-    //    earthUniforms.glow.needsUpdate = true;
-
+    composer1.render();
+    finalUniforms.glowLayer.value = composer1.readBuffer.texture;
+    nightUniforms.color.value = colorStrToVec3(settings.glowColor);
+  
     composer2.render();
-
 
     requestAnimationFrame(animate);
 }
 
 init();
+//initGUI();
 animate();

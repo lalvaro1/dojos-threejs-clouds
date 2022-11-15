@@ -41,11 +41,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     float shadowIntensity = 0.5;
     float cloudShadow = 1. - texture(clouds, v_UV).r * shadowIntensity;
 
-    vec3 dayTexture = (texture(ground, v_UV).rgb * (ambient + diffuse) + specular) * cloudShadow;
-    vec3 nightTexture = texture(night, v_UV).rgb;    
-
-    float night_display = smoothstep(0.5, 1.0, 1. - diffuse);
-    vec3 groundTexture = dayTexture + nightTexture * night_display;
+    vec3 groundTexture = (texture(ground, v_UV).rgb * (ambient + diffuse) + specular) * cloudShadow;
 
     fragColor.xyz = groundTexture;
     fragColor.a = 1.0;
@@ -55,3 +51,4 @@ void main() {
     mainImage(fragColor, gl_FragCoord.xy);
 }
 `;
+
