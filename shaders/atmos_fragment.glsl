@@ -15,7 +15,7 @@ uniform float PARAM_ray;
 uniform float PARAM_mie;
 const float PARAM_transition_width = 0.415;
 const float PARAM_transition_power = 2.88;
-const float PARAM_outter_clipping = 40.;
+const float PARAM_outter_clipping = 1.5;
 
 const int NUM_OUT_SCATTER = 8;
 const int NUM_IN_SCATTER = 80;
@@ -177,7 +177,7 @@ void main(void) {
 
 	vec2 e = ray_vs_sphere( eye, dir, PARAM_outter);
 	if ( e.x > e.y ) {
-		fragColor = vec4( 0, 0, 0, 1 );
+		fragColor = vec4( 0, 1, 0, 1 );
         return;
 	}
 
