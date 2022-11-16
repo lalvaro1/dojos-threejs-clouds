@@ -1,4 +1,4 @@
-const final_fragmentShader = `
+export const final_fragmentShader = `
 
 out vec4 fragColor;
 varying vec2 v_UV;

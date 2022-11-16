@@ -1,4 +1,4 @@
-const atmos_fragmentShader = `
+export const atmos_fragmentShader = `
 
 varying vec2 v_UV;
 varying vec3 v_position;

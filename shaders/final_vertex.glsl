@@ -1,4 +1,4 @@
-const final_vertexShader = `
+export const final_vertexShader = `
 
 varying vec2 v_UV;
 

@@ -1,4 +1,4 @@
-const atmos_vertexShader = `
+export const atmos_vertexShader = `
 
 varying vec3 v_normal;
 varying vec2 v_UV;

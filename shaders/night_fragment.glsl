@@ -1,4 +1,4 @@
-const night_fragmentShader = `
+export const night_fragmentShader = `
 
 out vec4 fragColor;
 varying vec3 v_normal;

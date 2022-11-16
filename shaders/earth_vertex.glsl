@@ -1,4 +1,4 @@
-const earth_vertexShader = `
+export const earth_vertexShader = `
 
 varying vec3 v_normal;
 varying vec2 v_UV;

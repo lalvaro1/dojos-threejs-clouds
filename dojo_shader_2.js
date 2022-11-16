@@ -7,6 +7,16 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { Uniform } from 'three';
 import { Vector3 } from 'three';
+import { earth_fragmentShader } from './shaders/earth_fragment.glsl';
+import { earth_vertexShader } from './shaders/earth_vertex.glsl';
+import { clouds_fragmentShader } from './shaders/clouds_fragment.glsl';
+import { clouds_vertexShader } from './shaders/clouds_vertex.glsl';
+import { final_fragmentShader } from './shaders/final_fragment.glsl';
+import { final_vertexShader } from './shaders/final_vertex.glsl';
+import { night_fragmentShader } from './shaders/night_fragment.glsl';
+import { night_vertexShader } from './shaders/night_vertex.glsl';
+import { atmos_fragmentShader } from './shaders/atmos_fragment.glsl';
+import { atmos_vertexShader } from './shaders/atmos_vertex.glsl';
 
 let camera, renderer, controls;
 let glowScene, earthScene, cloudScene;
@@ -69,7 +79,7 @@ function init() {
 
     controls = new OrbitControls( camera, renderer.domElement );
     controls.enableDamping = true;
-    camera.position.set( 0, 2, 4);
+    camera.position.set( 0, 0.25, 1.);
     controls.update();
 
     const earthGeometry = new THREE.SphereGeometry( 0.5, 100, 100);
