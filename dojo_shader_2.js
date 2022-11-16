@@ -4,20 +4,20 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { BloomPass } from 'three/addons/postprocessing/BloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { Uniform } from 'three';
 import { Vector3 } from 'three';
 
 let camera, renderer, controls;
 let glowScene, earthScene, cloudScene;
-let earthMesh, nightMesh, cloudsMesh;
+let earthMesh, nightMesh, cloudsMesh, atmosMesh;
 let composer1, composer2, composer3;
 let bloomPass;
 
 let nightRenderPass, renderScene, finalPass;
 
 const earthUniforms = {
+    sun:  { value: 0 },
     time: { value: 0 },
     ground: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth.jpg" ) },
     mask: { type: "t", value: new THREE.TextureLoader().load( "./textures/mask.png" ) },   
@@ -27,12 +27,22 @@ const earthUniforms = {
 };
 
 const cloudsUniforms = {
+    sun:  { value: 0 },    
     clouds: earthUniforms.clouds,         
 };
 
 const nightUniforms = {
     night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night.jpg") },             
     color: new Uniform(new Vector3(1,1,1)),
+};
+
+const atmosUniforms = {
+    sun:  { value: 0 },    
+    PARAM_intensity : {value: 8.86},
+    PARAM_inner : {value: 12.81},
+    PARAM_outter : {value: 30.08},
+    PARAM_ray : {value: 0.56},
+    PARAM_mie : {value: 0.17},
 };
 
 const finalUniforms = {
@@ -59,10 +69,15 @@ function init() {
 
     controls = new OrbitControls( camera, renderer.domElement );
     controls.enableDamping = true;
-    camera.position.set( 0, 20, 40);
+    camera.position.set( 0, 2, 4);
+    camera.near = 0.01;
     controls.update();
 
-    const earthGeometry = new THREE.SphereGeometry( 15, 100, 100);
+    const earthGeometry = new THREE.SphereGeometry( 0.5, 100, 100);
+    const cloudsGeometry = new THREE.SphereGeometry( 0.505, 100, 100);
+    const atmosPlane = new THREE.PlaneGeometry( 4, 4 );
+
+    // Shaders / materials
 
     const earthMaterial = new THREE.ShaderMaterial({
         fragmentShader : earth_fragmentShader,
@@ -70,8 +85,6 @@ function init() {
         uniforms : earthUniforms,
         glslVersion: THREE.GLSL3   
     });
-
-    const cloudsGeometry = new THREE.SphereGeometry( 15.15, 100, 100);
 
     const cloudsMaterial = new THREE.ShaderMaterial({
         fragmentShader : clouds_fragmentShader,
@@ -81,8 +94,6 @@ function init() {
         transparent: true,   
     });
 
-    const nightGeometry = new THREE.SphereGeometry( 15, 100, 100);
-
     const nightMaterial = new THREE.ShaderMaterial({
         fragmentShader : night_fragmentShader,
         vertexShader : night_vertexShader,        
@@ -90,7 +101,17 @@ function init() {
         glslVersion: THREE.GLSL3   
     });
 
-    const finalMaterial = new THREE.ShaderMaterial({
+    const atmosMaterial = new THREE.ShaderMaterial({
+        fragmentShader : atmos_fragmentShader,
+        vertexShader : atmos_vertexShader,        
+        uniforms : atmosUniforms,
+        transparent: true,
+        depthTest: false,
+        blending: THREE.AdditiveBlending,
+        glslVersion: THREE.GLSL3   
+    });
+
+    const finalPassMaterial = new THREE.ShaderMaterial({
         fragmentShader : final_fragmentShader,
         vertexShader : final_vertexShader,        
         uniforms : finalUniforms,
@@ -98,6 +119,8 @@ function init() {
     });
 
     // Scenes
+    atmosMesh = new THREE.Mesh( atmosPlane, atmosMaterial );
+    earthScene.add( atmosMesh );
 
     earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
     earthScene.add(earthMesh);
@@ -105,7 +128,7 @@ function init() {
     nightMesh = new THREE.Mesh(earthGeometry, nightMaterial);
     nightMesh.parent = earthMesh;
     glowScene.add(nightMesh);
-   
+
     cloudsMesh = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
     cloudScene.add(cloudsMesh);
 
@@ -135,12 +158,20 @@ function init() {
     composer3.addPass( renderCloudScene );
     composer3.renderToScreen = false;
 
-    finalPass = new ShaderPass(finalMaterial);
+    finalPass = new ShaderPass(finalPassMaterial);
 
     composer2 = new EffectComposer( renderer );
     composer2.addPass( renderScene );
     composer2.addPass( finalPass );
 }
+
+let atmosSettings = {
+    intensity: 27,
+    inner: 0.493,
+    outter: 1.23,
+    ray: 0.0022,
+    mie: 0.002,
+};
 
 function initGUI() {
 
@@ -150,7 +181,14 @@ function initGUI() {
     generalFolder.add(bloomPass, 'strength', 0 , 5, 0.01);    
     generalFolder.add(bloomPass, 'radius', 0 , 1, 0.001);        
     generalFolder.add(bloomPass, 'threshold', 0, 1, 0.001);    
-    generalFolder.addColor(settings, 'glowColor');        
+    generalFolder.addColor(settings, 'glowColor');      
+    
+    const atmosFolder = settingsUI.addFolder('Atmos');
+    atmosFolder.add(atmosSettings, 'intensity', 0 , 50, 0.01);    
+    atmosFolder.add(atmosSettings, 'inner', 0 , 20, 0.01);    
+    atmosFolder.add(atmosSettings, 'outter', 15 , 50, 0.01);    
+    atmosFolder.add(atmosSettings, 'ray', 0 , 5, 0.01);    
+    atmosFolder.add(atmosSettings, 'mie', 0 , 5, 0.01);                    
 }
 
 function onWindowResize() {
@@ -179,9 +217,19 @@ function animate(millis) {
 
     let time = millis * 0.001;
 
+    let sun = new Vector3(1,0,0);
+
     earthUniforms.time.value = time;
 
     controls.update();
+
+    atmosUniforms.PARAM_intensity.value = atmosSettings.intensity;
+    atmosUniforms.PARAM_inner.value = atmosSettings.inner;
+    atmosUniforms.PARAM_outter.value = atmosSettings.outter;
+    atmosUniforms.PARAM_ray.value = atmosSettings.ray;
+    atmosUniforms.PARAM_mie.value = atmosSettings.mie;
+
+    atmosMesh.rotation.setFromRotationMatrix( camera.matrix );
 
     earthMesh.rotation.x = 0.5;
     earthMesh.rotation.y = -1.5 - 0.05 * time;
@@ -197,11 +245,15 @@ function animate(millis) {
 
     nightUniforms.color.value = colorStrToVec3(settings.glowColor);
   
+    earthUniforms.sun.value = sun;
+    cloudsUniforms.sun.value = sun;
+    atmosUniforms.sun.value = sun;        
+
     composer2.render();
 
     requestAnimationFrame(animate);
 }
 
 init();
-//initGUI();
+initGUI();
 animate();

@@ -30,20 +30,24 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     vec3 localNormal = computeLocalNormal();
 
     vec3 light = normalize(vec3(1, -0.2, -0.5));
-    float ambient = 0.05;
+
+    float ambient = 0.0;
     float diffuse = max(0., dot(-light, localNormal));
+
+    float earthSelfShadow = 1. - smoothstep(-0.5, 0.1, -dot(-light, v_normal));
+    diffuse *= earthSelfShadow;
 
     vec3 refl = reflect(light, localNormal);
 
     float mask = texture(mask, v_UV).r;
-    float specular = pow(max(dot(refl, normalize(cameraPosition-v_position)), 0.), 3.) * 0.15 * mask;
+    float specular = pow(max(dot(refl, normalize(cameraPosition-v_position)), 0.), 3.) * 0.15 * mask * earthSelfShadow;
 
     float shadowIntensity = 0.5;
     float cloudShadow = 1. - texture(clouds, v_UV).r * shadowIntensity;
 
     vec3 groundTexture = (texture(ground, v_UV).rgb * (ambient + diffuse) + specular) * cloudShadow;
 
-    fragColor.xyz = groundTexture;
+    fragColor.rgb = groundTexture;
     fragColor.a = 1.0;
 }
 
