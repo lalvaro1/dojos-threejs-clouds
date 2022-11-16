@@ -7,6 +7,7 @@ varying vec3 v_position;
 const float PI = 3.14159265359;
 const float MAX = 10000.0;
 
+uniform vec3 sun;
 uniform float PARAM_intensity;
 uniform float PARAM_inner;
 uniform float PARAM_outter;
@@ -151,8 +152,6 @@ vec3 ray_dir( float fov, vec2 size, vec2 pos ) {
 out vec4 fragColor;
 
 void main(void) {
-
-	vec3 sun = (viewMatrix * vec4(1,0,0,0)).xyz;
 
 	vec3 cameraToCenter = -cameraPosition;
 	vec3 cameraToPoint  = normalize(v_position-cameraPosition);

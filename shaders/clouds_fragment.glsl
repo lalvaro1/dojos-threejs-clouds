@@ -5,11 +5,12 @@ varying vec3 v_normal;
 varying vec2 v_UV;
 varying vec3 v_position;
 
+uniform vec3 sun;
 uniform sampler2D clouds;
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 
-    vec3  light = normalize(vec3(1, -0.2, -0.5));
+    vec3  light = sun;
     float ambient = 0.05;
     float diffuse = max(0., dot(-light, v_normal));
     diffuse = smoothstep(0., 0.33, diffuse);

@@ -17,7 +17,7 @@ let bloomPass;
 let nightRenderPass, renderScene, finalPass;
 
 const earthUniforms = {
-    sun:  { value: 0 },
+    sun:  new Uniform(new Vector3(1,1,1)),
     time: { value: 0 },
     ground: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth.jpg" ) },
     mask: { type: "t", value: new THREE.TextureLoader().load( "./textures/mask.png" ) },   
@@ -27,7 +27,7 @@ const earthUniforms = {
 };
 
 const cloudsUniforms = {
-    sun:  { value: 0 },    
+    sun:  new Uniform(new Vector3(1,1,1)),    
     clouds: earthUniforms.clouds,         
 };
 
@@ -37,7 +37,7 @@ const nightUniforms = {
 };
 
 const atmosUniforms = {
-    sun:  { value: 0 },    
+    sun:  new Uniform(new Vector3(1,1,1)),   
     PARAM_intensity : {value: 8.86},
     PARAM_inner : {value: 12.81},
     PARAM_outter : {value: 30.08},
@@ -65,12 +65,11 @@ function init() {
     glowScene = new THREE.Scene();    
     cloudScene = new THREE.Scene();    
 
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.001, 1000);
 
     controls = new OrbitControls( camera, renderer.domElement );
     controls.enableDamping = true;
     camera.position.set( 0, 2, 4);
-    camera.near = 0.01;
     controls.update();
 
     const earthGeometry = new THREE.SphereGeometry( 0.5, 100, 100);
@@ -218,6 +217,7 @@ function animate(millis) {
     let time = millis * 0.001;
 
     let sun = new Vector3(1,0,0);
+    //normalize(vec3(1, -0.2, -0.5))
 
     earthUniforms.time.value = time;
 
@@ -247,7 +247,7 @@ function animate(millis) {
   
     earthUniforms.sun.value = sun;
     cloudsUniforms.sun.value = sun;
-    atmosUniforms.sun.value = sun;        
+    atmosUniforms.sun.value = sun;
 
     composer2.render();
 
@@ -255,5 +255,5 @@ function animate(millis) {
 }
 
 init();
-initGUI();
+//initGUI();
 animate();
