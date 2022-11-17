@@ -1,4 +1,4 @@
-const clouds_vertexShader = `
+export const clouds_vertexShader = `
 
 varying vec3 v_normal;
 varying vec2 v_UV;

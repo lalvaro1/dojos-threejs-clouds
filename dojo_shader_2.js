@@ -1,5 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { earth_fragmentShader } from './shaders/earth_fragment.glsl';
+import { earth_vertexShader   } from './shaders/earth_vertex.glsl';
+//import { clouds_fragmentShader } from './shaders/clouds_fragment.glsl';
+//import { clouds_vertexShader   } from './shaders/clouds_vertex.glsl';
 
 let camera, scene, renderer, controls;
 let earthMesh;
