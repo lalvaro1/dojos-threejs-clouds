@@ -135,8 +135,8 @@ function init() {
     earthScene.add(earthMesh);
 
     nightMesh = new THREE.Mesh(earthGeometry, nightMaterial);
-    nightMesh.parent = earthMesh;
     glowScene.add(nightMesh);
+    nightMesh.parent = earthMesh;
 
     cloudsMesh = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
     cloudScene.add(cloudsMesh);
@@ -226,8 +226,7 @@ function animate(millis) {
 
     let time = millis * 0.001;
 
-    let sun = new Vector3(1,0,0);
-    //normalize(vec3(1, -0.2, -0.5))
+    const sun = new Vector3(0.88,0.17,0.44);
 
     earthUniforms.time.value = time;
 
@@ -243,9 +242,6 @@ function animate(millis) {
 
     earthMesh.rotation.x = 0.5;
     earthMesh.rotation.y = -1.5 - 0.05 * time;
-
-    nightMesh.rotation.x = 0.5;
-    nightMesh.rotation.y = -1.5 - 0.05 * time;
 
     composer1.render();
     composer3.render();    
