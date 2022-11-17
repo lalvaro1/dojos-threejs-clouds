@@ -1,4 +1,4 @@
-const clouds_fragmentShader = `
+export const clouds_fragmentShader = `
 
 out vec4 fragColor;
 varying vec3 v_normal;
@@ -17,10 +17,10 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     float specular = pow(max(dot(refl, normalize(cameraPosition-v_position)), 0.), 3.) * 0.15;
 
     vec3 view = normalize(v_position - cameraPosition);
-    float normalCheating = smoothstep(0.15, 0.25, abs(dot(view, -v_normal)));
+    float onEdge = smoothstep(0.15, 0.25, abs(dot(view, -v_normal)));
 
-    float clouds = (texture(clouds, v_UV).r * (ambient + diffuse) + specular) * normalCheating;
-    fragColor = vec4(1,1,1,clouds);
+    float cloudsAlpha = (texture(clouds, v_UV).r * (ambient + diffuse) + specular) * onEdge;
+    fragColor = vec4(1,1,1,cloudsAlpha);
 }
 
 void main() {
