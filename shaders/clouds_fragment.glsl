@@ -7,6 +7,7 @@ varying vec3 v_position;
 
 uniform vec3 sun;
 uniform sampler2D clouds;
+uniform float cloudPos;
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 
@@ -21,7 +22,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     vec3 view = normalize(v_position - cameraPosition);
     float normalCheating = smoothstep(0.15, 0.25, abs(dot(view, -v_normal)));
 
-    float cloudTexture = texture(clouds, v_UV).r;
+    float cloudTexture = texture(clouds, v_UV + vec2(cloudPos, 0.)).r;
     float northPoleCheating = smoothstep(0.925, 1., v_UV.y);
     float northPoleColor = 0.66;
    // cloudTexture = mix(cloudTexture, northPoleColor, northPoleCheating);

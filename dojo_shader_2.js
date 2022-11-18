@@ -32,13 +32,18 @@ const earthUniforms = {
     ground: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth.jpg" ) },
     mask: { type: "t", value: new THREE.TextureLoader().load( "./textures/mask.png" ) },   
     normalMap: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth_normal_map.png") },     
-    clouds: { type: "t", value: new THREE.TextureLoader().load( "./textures/clouds.jpg") },         
-    night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night.jpg") },             
+    clouds: { type: "t", value: new THREE.TextureLoader().load( "./textures/clouds.jpg", function ( texture ) {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+    })},         
+    night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night.jpg") },        
+    cloudPos : { value: 0 },     
 };
 
 const cloudsUniforms = {
     sun:  new Uniform(new Vector3(1,1,1)),    
-    clouds: earthUniforms.clouds,         
+    clouds: earthUniforms.clouds,
+    cloudPos : { value: 0 },                  
 };
 
 const nightUniforms = {
@@ -53,6 +58,7 @@ const atmosUniforms = {
     PARAM_outter : {value: 30.08},
     PARAM_ray : {value: 0.56},
     PARAM_mie : {value: 0.17},
+    PARAM_clipping : {value: 0},
 };
 
 const finalUniforms = {
@@ -176,10 +182,11 @@ function init() {
 
 let atmosSettings = {
     intensity: 27,
-    inner: 0.493,
-    outter: 1.23,
+    inner: 0.4991,
+    outter: 0.58,
     ray: 0.0022,
     mie: 0.002,
+    clipping : 1.05,
 };
 
 function initGUI() {
@@ -194,10 +201,11 @@ function initGUI() {
     
     const atmosFolder = settingsUI.addFolder('Atmos');
     atmosFolder.add(atmosSettings, 'intensity', 0 , 50, 0.01);    
-    atmosFolder.add(atmosSettings, 'inner', 0 , 20, 0.01);    
-    atmosFolder.add(atmosSettings, 'outter', 15 , 50, 0.01);    
-    atmosFolder.add(atmosSettings, 'ray', 0 , 5, 0.01);    
-    atmosFolder.add(atmosSettings, 'mie', 0 , 5, 0.01);                    
+    atmosFolder.add(atmosSettings, 'inner', 0.495 , 0.505, 0.0001);    
+    atmosFolder.add(atmosSettings, 'outter', 0 , 2, 0.01);    
+    atmosFolder.add(atmosSettings, 'ray', 0 , 0.005, 0.00001);    
+    atmosFolder.add(atmosSettings, 'mie', 0 , 0.005, 0.00001);     
+    atmosFolder.add(atmosSettings, 'clipping', 0, 3, 0.005);               
 }
 
 function onWindowResize() {
@@ -237,6 +245,7 @@ function animate(millis) {
     atmosUniforms.PARAM_outter.value = atmosSettings.outter;
     atmosUniforms.PARAM_ray.value = atmosSettings.ray;
     atmosUniforms.PARAM_mie.value = atmosSettings.mie;
+    atmosUniforms.PARAM_clipping.value = atmosSettings.clipping;    
 
     atmosMesh.rotation.setFromRotationMatrix( camera.matrix );
 
@@ -254,6 +263,10 @@ function animate(millis) {
     earthUniforms.sun.value = sun;
     cloudsUniforms.sun.value = sun;
     atmosUniforms.sun.value = sun;
+
+    const cloudPos = 0.0 * time;
+    earthUniforms.cloudPos.value = cloudPos;
+    cloudsUniforms.cloudPos.value = cloudPos;    
 
     composer2.render();
 

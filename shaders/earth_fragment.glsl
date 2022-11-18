@@ -7,6 +7,7 @@ varying vec3 v_position;
 uniform vec3 sun;
 
 uniform float time;
+uniform float cloudPos;
 uniform sampler2D ground;
 uniform sampler2D mask;
 uniform sampler2D normalMap;
@@ -44,7 +45,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     float specular = pow(max(dot(refl, normalize(cameraPosition-v_position)), 0.), 3.) * 0.15 * mask * earthSelfShadow;
 
     float shadowIntensity = 0.5;
-    float cloudShadow = 1. - texture(clouds, v_UV).r * shadowIntensity;
+    float cloudShadow = 1. - texture(clouds, v_UV + vec2(cloudPos, 0.) ).r * shadowIntensity;
 
     vec3 groundTexture = (texture(ground, v_UV).rgb * (ambient + diffuse) + specular) * cloudShadow;
 

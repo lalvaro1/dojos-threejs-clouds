@@ -13,9 +13,10 @@ uniform float PARAM_inner;
 uniform float PARAM_outter;
 uniform float PARAM_ray;
 uniform float PARAM_mie;
+uniform float PARAM_clipping;
+
 const float PARAM_transition_width = 0.415;
 const float PARAM_transition_power = 2.88;
-const float PARAM_outter_clipping = 1.5;
 
 const int NUM_OUT_SCATTER = 8;
 const int NUM_IN_SCATTER = 80;
@@ -161,11 +162,9 @@ void main(void) {
 	float distToCenter = length(projectedPoint)/PARAM_inner;
 	float alpha = pow(smoothstep(PARAM_transition_width, 1., distToCenter), PARAM_transition_power);
 
-//alpha = smoothstep(0., 0.5, distToCenter);
-
 	// do not compute when not necessary
 	if(alpha<0.01) return;
-	if(distToCenter>PARAM_outter_clipping) return;
+	if(distToCenter>PARAM_clipping) return;
 
 	fragColor.a = alpha;	
 
