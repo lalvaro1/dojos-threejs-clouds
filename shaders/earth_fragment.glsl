@@ -37,10 +37,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     float mask = texture(mask, v_UV).r;
     float specular = pow(max(dot(refl, normalize(cameraPosition-v_position)), 0.), 3.) * 0.15 * mask;
 
-    float shadowIntensity = 0.5;
-    float cloudShadow = 1. - texture(clouds, v_UV).r * shadowIntensity;
-
-    fragColor.xyz = (texture(ground, v_UV).rgb * (ambient + diffuse) + specular) * cloudShadow;
+    fragColor.xyz = (texture(ground, v_UV).rgb * (ambient + diffuse) + specular);
     fragColor.a = 1.0;
 }
 
