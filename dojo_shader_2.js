@@ -76,7 +76,8 @@ const beamUniforms = {
     stretching : { value: 0 },
     baseIntensity : { value: 0 },
     rayIntensity : { value: 0 },    
-    minAlpha : { value: 0 },    
+    minAlpha : { value: 0 },   
+    waveForm :  { value: 0 },   
     rayColor: new Uniform(new Vector3(0,1,1)),
     baseColor: new Uniform(new Vector3(1,0,1)),        
 }
@@ -105,7 +106,7 @@ function init() {
     const earthGeometry = new THREE.SphereGeometry( 0.5, 100, 100);
     const cloudsGeometry = new THREE.SphereGeometry( 0.505, 100, 100);
     const atmosPlane = new THREE.PlaneGeometry( 4, 4 );
-    const beamGeometry = new THREE.ConeGeometry(0.0125, 0.6, 64, 8, 0, 3.1415*2);
+    const beamGeometry = new THREE.ConeGeometry(0.025, 0.6, 64, 8, 0, 3.1415*2);
 
     // Shaders / materials
 
@@ -225,8 +226,9 @@ let beamSettings = {
     baseIntensity : 0.18,
     rayIntensity : 0.18,    
     minAlpha : 0.7,
-    rayColor : '#ffa400',
-    baseColor : '#ffa400',        
+    waveForm : 0,
+    rayColor : '#bbd3ff',
+    baseColor : '#bbd3ff',
 };
 
 
@@ -252,9 +254,10 @@ function initGUI() {
     beamFolder.add(beamSettings, 'stretching', 0.25 , 10, 0.01);    
     beamFolder.add(beamSettings, 'speed', 0 , 50, 0.01);        
     beamFolder.add(beamSettings, 'segments', 0 , 500, 1);        
-    beamFolder.add(beamSettings, 'rayIntensity', 0 , 2, 0.01);                
-    beamFolder.add(beamSettings, 'baseIntensity', 0 , 2, 0.01);                    
+    beamFolder.add(beamSettings, 'rayIntensity', 0 , 1, 0.005);                
+    beamFolder.add(beamSettings, 'baseIntensity', 0 , 1, 0.005);                
     beamFolder.add(beamSettings, 'minAlpha', 0 , 1, 0.01);        
+    beamFolder.add(beamSettings, 'waveForm', 0 , 10, 1);            
     beamFolder.addColor(beamSettings, 'rayColor'); 
     beamFolder.addColor(beamSettings, 'baseColor');             
 }
@@ -324,6 +327,8 @@ function animate(millis) {
     beamUniforms.speed.value = beamSettings.speed;
     beamUniforms.stretching.value = beamSettings.stretching;
     beamUniforms.minAlpha.value = beamSettings.minAlpha;                
+
+    beamUniforms.waveForm.value = beamSettings.waveForm;                
 
     const cloudPos = 0.0 * time;
     earthUniforms.cloudPos.value = cloudPos;

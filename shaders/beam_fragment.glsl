@@ -16,6 +16,7 @@ uniform float rayIntensity;
 uniform float baseIntensity;
 uniform vec3 rayColor;
 uniform vec3 baseColor;
+uniform int waveForm;
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 
@@ -33,10 +34,31 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 
     float alphaVerticalCut = smoothstep(0.495, 0.500, height);
 
-    float alphaAnimation = minAlpha + (sin(time * speed + pow(height, stretching) * segments) + 1.)* 0.5 * (1. - minAlpha);
+    float waveAlpha;
+    
+    switch(waveForm) {
+        case 0 : {
+            waveAlpha = minAlpha + (sin(time * speed + pow(height, stretching) * segments) + 1.)* 0.5 * (1. - minAlpha);
+            break;
+        }
+        case 1 : {
+            float z = time * speed * 0.05 + pow(height, stretching) * segments * 0.25;
+            float discrete = floor( (z+0.1) / 0.2 ) * 0.2;    
+
+            waveAlpha = 1. - smoothstep(0.0, 0.02, abs(z - discrete));
+            break;
+        }
+        case 2 : {
+            float c = mod(time * speed * 0.05 + pow(height, stretching) * segments * 0.25, 0.2);
+            waveAlpha = 1. - smoothstep(0.05, 0.2, c);
+            break;
+        }
+
+    
+    }
 
     fragColor.rgb = beamColor;
-    fragColor.a = max(alphaAnimation * rayIntensity, earthJunction * baseIntensity) * alphaVerticalCut * alphaEdgeSmoothing;
+    fragColor.a = max(waveAlpha * rayIntensity, earthJunction * baseIntensity) * alphaVerticalCut * alphaEdgeSmoothing;
 }
 
 void main() {
