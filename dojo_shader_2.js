@@ -47,6 +47,7 @@ const cloudsUniforms = {
 };
 
 const nightUniforms = {
+    sun:  new Uniform(new Vector3(1,1,1)),    
     night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night_S.jpg") },             
     cloudAttenuation : { value: 0 },
     clouds: earthUniforms.clouds,
@@ -164,7 +165,7 @@ function init() {
     
     bloomPass.needsSwap = false;
     bloomPass.clear = false;
-    bloomPass.cloudAttenuation = 0.;
+    bloomPass.cloudAttenuation = 0.5;
     
     composer1 = new EffectComposer( renderer );
     composer1.addPass( nightRenderPass );
@@ -260,6 +261,7 @@ function animate(millis) {
     earthUniforms.sun.value = sun;
     cloudsUniforms.sun.value = sun;
     atmosUniforms.sun.value = sun;
+    nightUniforms.sun.value = sun;    
 
     const cloudPos = 0.0 * time;
     earthUniforms.cloudPos.value = cloudPos;

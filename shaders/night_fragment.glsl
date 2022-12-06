@@ -7,6 +7,7 @@ varying vec3 v_position;
 
 uniform sampler2D night;
 uniform vec3 color;
+uniform vec3 sun;
 uniform sampler2D clouds;
 uniform float cloudAttenuation;
 
@@ -14,11 +15,11 @@ float cloudPos = 0.f; //tmp
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 
-    vec3 light = normalize(vec3(1, -0.2, -0.5));
+    vec3 light = sun;
     vec3 nightTexture = texture(night, v_UV).rgb;    
 
     float diffuse = max(0., dot(-light, v_normal));
-    float nightDayRatio = smoothstep(0.5, 1.0, 1. - diffuse);
+    float nightDayRatio = smoothstep(0.75, 1.0, 1. - diffuse);
 
     float cloudShadowing = 1. - texture(clouds, v_UV + vec2(cloudPos, 0.) ).r * cloudAttenuation;
 
