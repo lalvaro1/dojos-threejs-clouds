@@ -11,7 +11,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     float cloud = texture2D(cloudLayer, v_UV ).r;
     vec4 ground = texture2D(tDiffuse, v_UV ) + texture2D(glowLayer, v_UV);
 
-    fragColor = mix(ground, vec4(1), cloud);
+    fragColor = ground; //mix(ground, vec4(1), cloud);
     fragColor.a = 1.;
 
     //fragColor = vec4(vec3(texture2D(cloudLayer, v_UV ).r), 1.);

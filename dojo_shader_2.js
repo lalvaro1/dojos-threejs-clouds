@@ -21,7 +21,7 @@ import { atmos_vertexShader } from './shaders/atmos_vertex.glsl';
 let camera, renderer, controls;
 let glowScene, earthScene, cloudScene;
 let earthMesh, nightMesh, cloudsMesh, atmosMesh;
-let composer1, composer2, composer3;
+let composer1, composer2;
 let bloomPass;
 
 let nightRenderPass, renderScene, finalPass;
@@ -29,14 +29,14 @@ let nightRenderPass, renderScene, finalPass;
 const earthUniforms = {
     sun:  new Uniform(new Vector3(1,1,1)),
     time: { value: 0 },
-    ground: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth.jpg" ) },
-    mask: { type: "t", value: new THREE.TextureLoader().load( "./textures/mask.png" ) },   
-    normalMap: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth_normal_map.png") },     
-    clouds: { type: "t", value: new THREE.TextureLoader().load( "./textures/clouds.jpg", function ( texture ) {
+    ground: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth_S.jpg" ) },
+    mask: { type: "t", value: new THREE.TextureLoader().load( "./textures/mask_S.png" ) },   
+    normalMap: { type: "t", value: new THREE.TextureLoader().load( "./textures/earth_normal_map_S.png") },     
+    clouds: { type: "t", value: new THREE.TextureLoader().load( "./textures/clouds_S.jpg", function ( texture ) {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
     })},         
-    night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night.jpg") },        
+    night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night_S.jpg") },        
     cloudPos : { value: 0 },     
 };
 
@@ -47,7 +47,9 @@ const cloudsUniforms = {
 };
 
 const nightUniforms = {
-    night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night.jpg") },             
+    night: { type: "t", value: new THREE.TextureLoader().load( "./textures/night_S.jpg") },             
+    cloudAttenuation : { value: 0 },
+    clouds: earthUniforms.clouds,
     color: new Uniform(new Vector3(1,1,1)),
 };
 
@@ -79,7 +81,7 @@ function init() {
 
     earthScene = new THREE.Scene();
     glowScene = new THREE.Scene();    
-    cloudScene = new THREE.Scene();    
+    //cloudScene = new THREE.Scene();    
 
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.001, 1000);
 
@@ -145,7 +147,7 @@ function init() {
     nightMesh.parent = earthMesh;
 
     cloudsMesh = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
-    cloudScene.add(cloudsMesh);
+    earthScene.add(cloudsMesh);
 
     window.addEventListener('resize', onWindowResize, false);
 
@@ -162,16 +164,12 @@ function init() {
     
     bloomPass.needsSwap = false;
     bloomPass.clear = false;
+    bloomPass.cloudAttenuation = 0.;
     
     composer1 = new EffectComposer( renderer );
     composer1.addPass( nightRenderPass );
     composer1.addPass( bloomPass );
     composer1.renderToScreen = false;
-
-    composer3 = new EffectComposer( renderer );
-    let renderCloudScene = new RenderPass( cloudScene, camera );    
-    composer3.addPass( renderCloudScene );
-    composer3.renderToScreen = false;
 
     finalPass = new ShaderPass(finalPassMaterial);
 
@@ -198,6 +196,7 @@ function initGUI() {
     generalFolder.add(bloomPass, 'radius', 0 , 1, 0.001);        
     generalFolder.add(bloomPass, 'threshold', 0, 1, 0.001);    
     generalFolder.addColor(settings, 'glowColor');      
+    generalFolder.add(bloomPass, 'cloudAttenuation', 0, 1, 0.001);    
     
     const atmosFolder = settingsUI.addFolder('Atmos');
     atmosFolder.add(atmosSettings, 'intensity', 0 , 50, 0.01);    
@@ -205,7 +204,7 @@ function initGUI() {
     atmosFolder.add(atmosSettings, 'outter', 0 , 2, 0.01);    
     atmosFolder.add(atmosSettings, 'ray', 0 , 0.005, 0.00001);    
     atmosFolder.add(atmosSettings, 'mie', 0 , 0.005, 0.00001);     
-    atmosFolder.add(atmosSettings, 'clipping', 0, 3, 0.005);               
+    atmosFolder.add(atmosSettings, 'clipping', 0, 3, 0.005);           
 }
 
 function onWindowResize() {
@@ -218,7 +217,6 @@ function onWindowResize() {
     renderer.setSize( width, height );
     composer1.setSize( width, height );
     composer2.setSize( width, height );
-    composer3.setSize( width, height );    
 }
 
 function colorStrToVec3(colorStr) {
@@ -253,12 +251,11 @@ function animate(millis) {
     earthMesh.rotation.y = -1.5 - 0.05 * time;
 
     composer1.render();
-    composer3.render();    
 
     finalUniforms.glowLayer.value = composer1.readBuffer.texture;
-    finalUniforms.cloudLayer.value = composer3.readBuffer.texture;    
 
     nightUniforms.color.value = colorStrToVec3(settings.glowColor);
+    nightUniforms.cloudAttenuation.value = bloomPass.cloudAttenuation;
   
     earthUniforms.sun.value = sun;
     cloudsUniforms.sun.value = sun;
@@ -274,5 +271,5 @@ function animate(millis) {
 }
 
 init();
-//initGUI();
+initGUI();
 animate();
